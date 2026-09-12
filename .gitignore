@@ -25,3 +25,13 @@ Thumbs.db
 .vscode/
 .idea/
 *.local
+
+# Python 虚拟环境与缓存
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# 数据库与运行时上传产物(代码会自动创建目录)
+*.db
+uploads/

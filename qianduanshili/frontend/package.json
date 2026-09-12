@@ -1,7 +1,7 @@
 {
   "name": "frontend",
   "version": "1.0.0",
-  "description": "商品管理前端",
+  "description": "岗位管理前端",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
