@@ -1,0 +1,32 @@
+# 环境与密钥
+.env
+certs/
+
+# 依赖与缓存
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.log
+
+# 用户上传的真实简历（含个人信息，不入库）
+uploads/
+
+# 其他课程的实验目录与录屏
+bert_exp/
+seq2seq翻译实验/
+录屏演示/
+
+# 本地草稿与临时文件
+_*.py
+_*.txt
+_*.docx
+_*.log
+课程设计实验报告.md
+er_conceptual.png
+
+# 编辑器与系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

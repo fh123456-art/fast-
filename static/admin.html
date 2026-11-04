@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JobMatch AI · 平台管理后台</title>
+  <link rel="stylesheet" href="/static/css/admin.css" />
+</head>
+<body>
+<script>
+  (function(){
+    var t = localStorage.getItem('token');
+    var u = null;
+    try { u = JSON.parse(localStorage.getItem('user') || 'null'); } catch(e){}
+    if (!t || !u || u.role !== 'admin') {
+      location.replace('/login?role=admin&redirect=/admin');
+    }
+  })();
+</script>
+<!-- ========== 主后台（无内嵌登录，由 JS 提前跳转） ========== -->
+<div id="app" class="app-wrap" style="display:none;">
+
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">🛡️</div>
+      <div class="brand-text">
+        <div class="brand-title">管理后台</div>
+        <div class="brand-sub">JobMatch AI</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-group">概览</div>
+      <a class="nav-item active" data-key="dashboard" href="#">
+        <span class="ni">📊</span><span>仪表盘</span>
+      </a>
+
+      <div class="nav-group">用户与内容</div>
+      <a class="nav-item" data-key="users" href="#"><span class="ni">👥</span><span>用户管理</span></a>
+      <a class="nav-item" data-key="enterprises" href="#"><span class="ni">🏢</span><span>企业审核</span></a>
+      <a class="nav-item" data-key="jobs" href="#"><span class="ni">💼</span><span>岗位审核</span></a>
+      <a class="nav-item" data-key="resumes" href="#"><span class="ni">📄</span><span>简历审核</span></a>
+
+      <div class="nav-group">AI 与题库</div>
+      <a class="nav-item" data-key="prompts" href="#"><span class="ni">🧠</span><span>Prompt 模板</span></a>
+      <a class="nav-item" data-key="interview-bank" href="#"><span class="ni">🗣️</span><span>面试题库</span></a>
+      <a class="nav-item" data-key="exam-bank" href="#"><span class="ni">📝</span><span>笔试题库</span></a>
+      <a class="nav-item" data-key="feedback" href="#"><span class="ni">👍</span><span>AI 用户反馈</span></a>
+      <a class="nav-item" data-key="bad-cases" href="#"><span class="ni">🐞</span><span>坏案例库</span></a>
+
+      <div class="nav-group">平台运营</div>
+      <a class="nav-item" data-key="messages" href="#"><span class="ni">📢</span><span>系统公告</span></a>
+      <a class="nav-item" data-key="logs" href="#"><span class="ni">📋</span><span>操作审计日志</span></a>
+    </nav>
+
+    <div class="side-footer">
+      <button class="btn-ghost" onclick="logout()">🚪 退出登录</button>
+    </div>
+  </aside>
+
+  <!-- 主内容 -->
+  <main class="main">
+    <header class="topbar">
+      <div class="crumb" id="crumb">📊 仪表盘</div>
+      <div class="topbar-right">
+        <span id="adminInfo" class="admin-info">admin</span>
+      </div>
+    </header>
+
+    <section class="content">
+
+      <!-- 仪表盘 -->
+      <div class="page" id="page-dashboard">
+        <div class="stat-grid">
+          <div class="stat-card grad-1">
+            <div class="stat-label">注册学生</div>
+            <div class="stat-num" id="stat-users">-</div>
+          </div>
+          <div class="stat-card grad-2">
+            <div class="stat-label">入驻企业</div>
+            <div class="stat-num" id="stat-enterprises">-</div>
+          </div>
+          <div class="stat-card grad-3">
+            <div class="stat-label">有效岗位</div>
+            <div class="stat-num" id="stat-jobs">-</div>
+          </div>
+          <div class="stat-card grad-4">
+            <div class="stat-label">创建简历</div>
+            <div class="stat-num" id="stat-resumes">-</div>
+          </div>
+          <div class="stat-card grad-5">
+            <div class="stat-label">求职投递</div>
+            <div class="stat-num" id="stat-applies">-</div>
+          </div>
+          <div class="stat-card grad-6">
+            <div class="stat-label">AI 面试场次</div>
+            <div class="stat-num" id="stat-interviews">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">👍 反馈喜欢</div>
+            <div class="stat-num stat-like" id="stat-like">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">👎 反馈点踩</div>
+            <div class="stat-num stat-dislike" id="stat-dislike">-</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">🔧 快捷操作</div>
+          </div>
+          <div class="quick-ops">
+            <button class="btn-primary" onclick="switchPage('users')">👥 去用户管理</button>
+            <button class="btn-warn" onclick="switchPage('enterprises')">🏢 审核企业</button>
+            <button class="btn-info" onclick="switchPage('jobs')">💼 审核岗位</button>
+            <button class="btn-info" onclick="switchPage('prompts')">🧠 管理 Prompt</button>
+            <button class="btn-ghost btn-ghost-dark" onclick="exportUsers()">⬇️ 导出用户 Excel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 用户管理 -->
+      <div class="page" id="page-users" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">👥 用户管理（学生账号）</div>
+            <div class="panel-tools">
+              <input id="userKeyword" placeholder="按用户名搜索" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;" />
+              <button class="btn-primary btn-sm" onclick="loadUsers()">🔍 查询</button>
+              <button class="btn-ghost btn-sm" onclick="exportUsers()">⬇️ 导出 Excel</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr>
+              <th>ID</th><th>用户名</th><th>姓名</th><th>学校</th><th>专业</th><th>AI配额</th><th>简历上限</th><th>状态</th><th>操作</th>
+            </tr></thead>
+            <tbody id="userTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 企业审核 -->
+      <div class="page" id="page-enterprises" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">🏢 企业账号审核</div>
+            <div class="panel-tools">
+              <select id="entStatus" onchange="loadEnterprises()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">全部状态</option>
+                <option value="pending">待审核</option>
+                <option value="approved">已通过</option>
+                <option value="rejected">已拒绝</option>
+              </select>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr>
+              <th>ID</th><th>用户名</th><th>企业名称</th><th>行业</th><th>状态</th><th>注册时间</th><th>操作</th>
+            </tr></thead>
+            <tbody id="entTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 岗位审核 -->
+      <div class="page" id="page-jobs" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">💼 岗位审核</div>
+            <div class="panel-tools">
+              <select id="jobStatus" onchange="loadJobsAudit()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="pending">待审核</option>
+                <option value="approved">已通过</option>
+                <option value="rejected">已下架</option>
+              </select>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr>
+              <th>ID</th><th>岗位</th><th>公司</th><th>状态</th><th>发布时间</th><th>操作</th>
+            </tr></thead>
+            <tbody id="jobTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 简历审核 -->
+      <div class="page" id="page-resumes" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">📄 简历审核</div>
+            <div class="panel-tools">
+              <select id="resumeStatus" onchange="loadResumesAudit()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="draft">草稿</option>
+                <option value="published">已发布</option>
+                <option value="rejected">已退回</option>
+              </select>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr>
+              <th>ID</th><th>用户ID</th><th>简历标题</th><th>状态</th><th>创建时间</th><th>操作</th>
+            </tr></thead>
+            <tbody id="resumeTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Prompt 模板 -->
+      <div class="page" id="page-prompts" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">🧠 AI Prompt 模板管理</div>
+            <div class="panel-tools">
+              <select id="promptAgent" onchange="loadPrompts()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">全部 Agent</option>
+                <option value="ResumeParserAgent">ResumeParserAgent</option>
+                <option value="ResumeDiagnoseAgent">ResumeDiagnoseAgent</option>
+                <option value="JobMatchAgent">JobMatchAgent</option>
+                <option value="JobSearchAgent">JobSearchAgent</option>
+                <option value="HRInterviewAgent">HRInterviewAgent</option>
+                <option value="ExamGeneratorAgent">ExamGeneratorAgent</option>
+              </select>
+              <button class="btn-primary btn-sm" onclick="openPromptForm()">➕ 新建模板</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr>
+              <th>ID</th><th>Agent</th><th>模板名称</th><th>版本</th><th>启用</th><th>操作</th>
+            </tr></thead>
+            <tbody id="promptTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 面试题库 -->
+      <div class="page" id="page-interview-bank" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">🗣️ 面试题库</div>
+            <div class="panel-tools">
+              <input id="interviewCat" placeholder="类别过滤（如 java、前端）" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:160px;" />
+              <button class="btn-primary btn-sm" onclick="loadInterviewBank()">🔍 查询</button>
+              <button class="btn-info btn-sm" onclick="openInterviewForm()">➕ 添加题目</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>类别</th><th>难度</th><th>题目</th></tr></thead>
+            <tbody id="interviewTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 笔试题库 -->
+      <div class="page" id="page-exam-bank" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">📝 笔试题库</div>
+            <div class="panel-tools">
+              <input id="examCat" placeholder="类别过滤" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:160px;" />
+              <button class="btn-primary btn-sm" onclick="loadExamBank()">🔍 查询</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>类别</th><th>难度</th><th>题目</th></tr></thead>
+            <tbody id="examTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AI 反馈 -->
+      <div class="page" id="page-feedback" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">👍 AI 用户反馈</div>
+            <div class="panel-tools">
+              <select id="fbType" onchange="loadFeedback()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">全部类型</option>
+                <option value="resume_diagnose">简历诊断</option>
+                <option value="job_match">岗位匹配</option>
+                <option value="interview">AI面试</option>
+                <option value="exam">AI笔试</option>
+              </select>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>用户ID</th><th>目标</th><th>评价</th><th>用户评论</th><th>时间</th></tr></thead>
+            <tbody id="fbTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 坏案例库 -->
+      <div class="page" id="page-bad-cases" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">🐞 AI 坏案例库</div>
+            <div class="panel-tools">
+              <select id="bcStatus" onchange="loadBadCases()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">全部状态</option>
+                <option value="open">未修复</option>
+                <option value="fixed">已修复</option>
+              </select>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Agent</th><th>请求</th><th>响应</th><th>原因</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody id="bcTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 系统公告 -->
+      <div class="page" id="page-messages" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">📢 系统公告</div>
+            <div class="panel-tools">
+              <button class="btn-primary btn-sm" onclick="openMessageForm()">➕ 发布公告</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>标题</th><th>接收角色</th><th>内容</th><th>发布时间</th></tr></thead>
+            <tbody id="msgTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 操作日志 -->
+      <div class="page" id="page-logs" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">📋 操作审计日志（最近 200 条）</div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>管理员</th><th>动作</th><th>目标</th><th>详情</th><th>时间</th></tr></thead>
+            <tbody id="logTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </main>
+</div>
+
+<!-- ========== 通用弹窗 ========== -->
+<div id="modal" class="modal" style="display:none;">
+  <div class="modal-mask" onclick="closeModal()"></div>
+  <div class="modal-box">
+    <div class="modal-head">
+      <div id="modalTitle" class="modal-title">标题</div>
+      <button onclick="closeModal()" class="modal-close">✕</button>
+    </div>
+    <div id="modalBody" class="modal-body"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast" style="display:none;"></div>
+
+<script src="/static/js/admin.js"></script>
+</body>
+</html>

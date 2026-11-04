@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>登录 - JobMatch AI  大学生智能求职推荐系统</title>
+  <link rel="stylesheet" href="/static/css/style.css?v=23" />
+</head>
+<body>
+  <div class="app login-app">
+    <div class="login-wrap">
+      <div class="login-logo">
+        <div class="ll-icon">业</div>
+        <h1>JobMatch AI</h1>
+        <p>大学生智能求职推荐系统 · 求职一站式服务</p>
+      </div>
+
+      <div class="role-tabs">
+        <div class="role-tab active" data-role="student">
+          <span class="rt-icon">🎓</span>学生用户
+        </div>
+        <div class="role-tab" data-role="admin">
+          <span class="rt-icon">🛡️</span>平台管理
+        </div>
+      </div>
+
+      <div id="loginTipBar" class="login-tip-bar">
+        学生账号登录后进入「个人中心」，AI 简历优化、岗位匹配、模拟面试等功能全部开放。
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <input type="text" id="username" placeholder="手机号 / 邮箱 / 用户名" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <input type="password" id="password" placeholder="密码" autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn-primary">登 录</button>
+        <div class="form-links">
+          <a href="#" id="openRegister">注册账号</a>
+          <a href="#" id="forgotPwd">找回密码</a>
+        </div>
+      </form>
+
+      <div class="hr-divider">关注微信公众号</div>
+
+      <div class="qr-row">
+        <div class="qr-item">
+          <div class="qr-box">📱</div>
+          <div class="qr-label">微信服务号</div>
+        </div>
+        <div class="qr-item">
+          <div class="qr-box">📱</div>
+          <div class="qr-label">就业资讯公众号</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 注册弹窗 -->
+  <div class="modal" id="registerModal">
+    <div class="modal-mask"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">学生注册</div>
+        <span class="modal-close" id="closeRegister">×</span>
+      </div>
+      <form id="registerForm">
+        <div class="form-group">
+          <input type="text" id="reg_username" placeholder="用户名（3-64 位）" required />
+        </div>
+        <div class="form-group">
+          <input type="password" id="reg_password" placeholder="密码（至少 6 位）" required />
+        </div>
+        <div class="form-group">
+          <input type="password" id="reg_password2" placeholder="确认密码" required />
+        </div>
+        <div class="form-group">
+          <input type="text" id="reg_real_name" placeholder="真实姓名（选填）" />
+        </div>
+        <div class="form-group">
+          <input type="text" id="reg_school" placeholder="学校（选填）" />
+        </div>
+        <div class="form-group">
+          <input type="text" id="reg_major" placeholder="专业（选填）" />
+        </div>
+        <div class="form-group">
+          <select id="reg_education">
+            <option value="">学历（选填）</option>
+            <option value="大专">大专</option>
+            <option value="本科">本科</option>
+            <option value="硕士">硕士</option>
+            <option value="博士">博士</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <input type="number" id="reg_graduate_year" placeholder="毕业年份（选填，如 2026）" />
+        </div>
+        <button type="submit" class="btn-primary">立即注册</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/js/login.js?v=11"></script>
+</body>
+</html>

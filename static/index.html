@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>JobMatch AI  大学生智能求职推荐系统</title>
+  <link rel="stylesheet" href="/static/css/style.css?v=23" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- ========== 顶部导航栏（全宽吸顶） ========== -->
+    <header class="appbar">
+      <div class="ab-inner">
+        <div class="ab-brand" onclick="switchTab('home')">
+          <div class="logo-icon">业</div>
+          <div>
+            <div class="logo-text">JobMatch AI</div>
+            <div class="logo-sub">大学生智能求职推荐系统</div>
+          </div>
+        </div>
+        <div class="search-bar ab-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input type="text" id="searchInput" placeholder="搜索职位 / 公司 / 岗位关键词，回车查看" />
+        </div>
+        <div class="ab-right">
+          <div class="ab-user" id="user-area"></div>
+          <div class="ab-theme" id="themeToggle" title="切换深色模式">🌙</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========== 左侧导航（桌面端显示） ========== -->
+    <nav class="sidebar">
+      <div class="side-group">
+        <div class="side-title">概览</div>
+        <div class="tab active" data-tab="home"><span class="tab-icon">🏠</span><span class="tab-name">首页</span></div>
+      </div>
+      <div class="side-group">
+        <div class="side-title">找工作</div>
+        <div class="tab" data-tab="position"><span class="tab-icon">💼</span><span class="tab-name">全部职位</span></div>
+        <div class="tab" data-tab="intern"><span class="tab-icon">⚡</span><span class="tab-name">实习岗位</span></div>
+        <div class="tab" data-tab="collected"><span class="tab-icon">⭐</span><span class="tab-name">收藏职位</span></div>
+        <div class="tab" data-tab="applies"><span class="tab-icon">📬</span><span class="tab-name">投递记录</span></div>
+      </div>
+      <div class="side-group">
+        <div class="side-title">AI 能力</div>
+        <div class="tab" data-tab="ai"><span class="tab-icon">🤖</span><span class="tab-name">AI 助手</span></div>
+        <div class="tab" data-tab="recommend"><span class="tab-icon">✨</span><span class="tab-name">AI 推荐</span></div>
+        <div class="tab" data-tab="resume"><span class="tab-icon">📄</span><span class="tab-name">我的简历</span></div>
+      </div>
+      <div class="side-group">
+        <div class="side-title">账户</div>
+        <div class="tab" data-tab="me"><span class="tab-icon">👤</span><span class="tab-name">个人中心</span></div>
+      </div>
+    </nav>
+
+    <main class="main">
+
+    <!-- ========== 首页 ========== -->
+    <section class="page-section" id="sec-home">
+
+      <div class="edu-banner">
+        <div class="edu-left">
+          <div class="edu-logo">智</div>
+          <span class="edu-slogan">国家智慧教育公共服务平台 · 人人皆学 处处能学 时时可学</span>
+        </div>
+        <div class="edu-right">
+          <div class="edu-region">
+            <span class="edu-switch" id="regionSwitch">全国 ▾</span>
+            <div class="edu-region-menu" id="regionMenu" hidden></div>
+          </div>
+          <div class="edu-searchbox">
+            <input class="edu-search-input" id="eduSearchInput" placeholder="搜索职位 / 公司" hidden />
+            <span class="edu-search" id="eduSearchBtn">🔍</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-content">
+
+        <div class="banner-wrap">
+          <div class="banner">
+            <div class="banner-slide active">
+              <div>
+                <div class="banner-title">AI 驱动求职</div>
+                <div class="banner-sub">简历诊断 · 岗位匹配 · 模拟面试 · 笔试练习</div>
+                <div class="banner-cta">
+                  <button class="bc-primary" onclick="switchTab('recommend')">✨ 开始 AI 推荐</button>
+                  <button class="bc-ghost" onclick="switchTab('position')">浏览全部职位</button>
+                </div>
+              </div>
+            </div>
+            <div class="banner-slide">
+              <div>
+                <div class="banner-title">春招进行时</div>
+                <div class="banner-sub">海量岗位 · 等你来选</div>
+              </div>
+            </div>
+            <div class="banner-slide">
+              <div>
+                <div class="banner-title">5 大智能体</div>
+                <div class="banner-sub">LangGraph · 全链路求职助手</div>
+              </div>
+            </div>
+            <div class="banner-dots">
+              <span class="active"></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 10 宫格：全对齐后端真实 API + 5 Agent -->
+        <div class="icon-grid">
+          <div class="icon-item" onclick="switchTab('position')">
+            <div class="icon">💼</div><div class="label">职位浏览</div>
+          </div>
+          <div class="icon-item" onclick="switchTab('resume')">
+            <div class="icon">📄</div><div class="label">我的简历</div>
+          </div>
+          <div class="icon-item" onclick="gotoAI('diagnose')">
+            <div class="icon">🛠️</div><div class="label">AI 简历诊断</div>
+          </div>
+          <div class="icon-item" onclick="gotoAI('match')">
+            <div class="icon">🎯</div><div class="label">AI 岗位匹配</div>
+          </div>
+          <div class="icon-item" onclick="gotoAI('interview')">
+            <div class="icon">🤖</div><div class="label">AI 模拟面试</div>
+          </div>
+          <div class="icon-item" onclick="gotoAI('exam')">
+            <div class="icon">📝</div><div class="label">AI 笔试练习</div>
+          </div>
+          <div class="icon-item" onclick="switchTab('collected')">
+            <div class="icon">⭐</div><div class="label">收藏职位</div>
+          </div>
+          <div class="icon-item" onclick="switchTab('applies')">
+            <div class="icon">📬</div><div class="label">投递记录</div>
+          </div>
+          <div class="icon-item" onclick="switchTab('intern')">
+            <div class="icon">⚡</div><div class="label">实习岗位</div>
+          </div>
+          <div class="icon-item" onclick="switchTab('me')">
+            <div class="icon">👤</div><div class="label">个人中心</div>
+          </div>
+        </div>
+
+        <div class="blue-banner" onclick="switchTab('recommend')">
+          <div class="bb-text">✨ AI 智能推荐 · 根据简历匹配岗位</div>
+          <div class="bb-arrow">›</div>
+        </div>
+
+        <div class="partners">
+          <div class="partner-item"><span class="p-icon">Lang</span>LangGraph</div>
+          <div class="partner-item"><span class="p-icon">Deep</span>DeepSeek</div>
+          <div class="partner-item"><span class="p-icon">FA</span>FastAPI</div>
+        </div>
+
+        <div class="section-title">热门职位 <span class="more" onclick="switchTab('position')">更多 ›</span></div>
+        <div id="home-job-list"></div>
+
+      </div>
+    </section>
+
+    <!-- ========== 职位列表 ========== -->
+    <section class="page-section" id="sec-position" style="display:none;">
+      <div class="page-content">
+        <div class="header">
+          <div class="page-head">
+            <div>
+              <div class="ph-title">💼 全部职位</div>
+              <div class="ph-sub">按城市、类型、薪资筛选，点击卡片查看详情</div>
+            </div>
+          </div>
+          <div class="search-bar" style="margin-top:12px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="text" id="positionSearch" placeholder="搜索职位 / 公司" />
+          </div>
+          <div class="filter-row">
+            <div class="fr-left">
+              <span class="pos-type-chip active" data-type="">全部</span>
+              <span class="pos-type-chip" data-type="全职">全职</span>
+              <span class="pos-type-chip" data-type="实习">实习</span>
+            </div>
+            <div class="fr-right">
+              <select id="positionSalary" class="filter-select">
+                <option value="0">薪资不限</option>
+                <option value="10">10K+</option>
+                <option value="20">20K+</option>
+                <option value="30">30K+</option>
+              </select>
+              <select id="positionSort" class="filter-select">
+                <option value="new">最新发布</option>
+                <option value="salary">薪资最高</option>
+              </select>
+            </div>
+          </div>
+          <div id="searchHistory" class="hist-row"></div>
+        </div>
+        <div id="position-list"></div>
+      </div>
+    </section>
+
+    <!-- ========== 实习岗位 ========== -->
+    <section class="page-section" id="sec-intern" style="display:none;">
+      <div class="page-content">
+        <div class="header">
+          <div class="page-head">
+            <div>
+              <div class="ph-title">⚡ 实习岗位</div>
+              <div class="ph-sub">与正式职位同库，按岗位类型筛选</div>
+            </div>
+          </div>
+        </div>
+        <div id="intern-list"></div>
+      </div>
+    </section>
+
+    <!-- ========== AI 助手（5 Agent 聚合） ========== -->
+    <section class="page-section" id="sec-ai" style="display:none;">
+      <div class="page-content">
+        <div class="header">
+          <div class="page-head">
+            <div>
+              <div class="ph-title">🤖 AI 求职助手</div>
+              <div class="ph-sub">基于 LangGraph · 5 大智能体协同工作</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent 1: 简历解析+诊断 -->
+        <div class="card">
+          <div class="ai-agent-card">
+            <div class="ai-agent-icon" style="background:linear-gradient(135deg,#2b7de9,#5aa9ff);">📄</div>
+            <div class="ai-agent-info">
+              <div class="ai-agent-title">简历解析 & 诊断</div>
+              <div class="ai-agent-desc">ResumeParserAgent + ResumeDiagnoseAgent · 上传 PDF 一键分析</div>
+            </div>
+          </div>
+          <div class="ai-agent-actions">
+            <button class="btn-mini" onclick="switchTab('resume')">去管理简历</button>
+          </div>
+        </div>
+
+        <!-- Agent 2: 岗位匹配 -->
+        <div class="card">
+          <div class="ai-agent-card">
+            <div class="ai-agent-icon" style="background:linear-gradient(135deg,#15b375,#3bd99a);">🎯</div>
+            <div class="ai-agent-info">
+              <div class="ai-agent-title">AI 岗位匹配</div>
+              <div class="ai-agent-desc">JobMatchAgent · 简历 vs JD 技能点对比打分</div>
+            </div>
+          </div>
+          <div class="ai-agent-actions">
+            <button class="btn-mini" onclick="switchTab('position')">选个岗位匹配</button>
+            <button class="btn-primary-mini" onclick="switchTab('recommend')">看智能推荐</button>
+          </div>
+        </div>
+
+        <!-- Agent 3: 模拟面试 -->
+        <div class="card">
+          <div class="ai-agent-card">
+            <div class="ai-agent-icon" style="background:linear-gradient(135deg,#ff7a45,#ffa57a);">🤖</div>
+            <div class="ai-agent-info">
+              <div class="ai-agent-title">AI 模拟面试</div>
+              <div class="ai-agent-desc">HRInterviewAgent · 多模式、动态难度、结构化报告</div>
+            </div>
+          </div>
+          <div class="ai-agent-actions">
+            <button class="btn-primary-mini" onclick="startAIInterview()">开始面试</button>
+            <button class="btn-mini" onclick="loadWrongQuestions('interview')">错题回顾</button>
+          </div>
+        </div>
+
+        <!-- Agent 4: 笔试出题 -->
+        <div class="card">
+          <div class="ai-agent-card">
+            <div class="ai-agent-icon" style="background:linear-gradient(135deg,#7a5af8,#a389ff);">📝</div>
+            <div class="ai-agent-info">
+              <div class="ai-agent-title">AI 笔试出题</div>
+              <div class="ai-agent-desc">ExamGeneratorAgent · 针对岗位生成专业笔试题</div>
+            </div>
+          </div>
+          <div class="ai-agent-actions">
+            <button class="btn-primary-mini" onclick="startAIExam()">生成笔试题</button>
+            <button class="btn-mini" onclick="loadWrongQuestions('exam')">错题本</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="state-hint" style="padding:14px 0;">
+            <div class="sh-icon">💡</div>
+            <div class="sh-sub">AI 调用会消耗你的次数配额，在个人中心查看剩余次数</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== AI 推荐 ========== -->
+    <section class="page-section" id="sec-recommend" style="display:none;">
+      <div class="page-content">
+        <div class="header">
+          <div class="page-head">
+            <div>
+              <div class="ph-title">✨ AI 个性化推荐</div>
+              <div class="ph-sub">基于你的学校 / 专业 / 简历关键词匹配</div>
+            </div>
+            <button class="btn-primary-mini" onclick="refreshRecommend()">🔄 刷新推荐</button>
+          </div>
+        </div>
+        <div id="recommend-list"></div>
+      </div>
+    </section>
+
+    <!-- ========== 简历管理 ========== -->
+    <section class="page-section" id="sec-resume" style="display:none;">
+      <div class="page-content">
+        <div class="header">
+          <div class="page-head">
+            <div>
+              <div class="ph-title">📄 我的简历</div>
+              <div class="ph-sub">支持多版本管理 / AI 诊断 / AI 润色 / 导出 PDF</div>
+            </div>
+            <div class="fr-right">
+              <button class="btn-primary-mini" onclick="document.getElementById('resume-file-input').click()">📤 上传简历</button>
+              <button class="btn-mini" onclick="createBlankResume()">✏️ 空白简历</button>
+            </div>
+          </div>
+        </div>
+        <input type="file" id="resume-file-input" accept=".pdf,.docx,.doc,.txt" style="display:none;" onchange="uploadResume(this)">
+        <div id="resume-upload-status" class="upload-status" hidden></div>
+        <div id="resume-list"></div>
+
+        <!-- ===== 内嵌编辑器 ===== -->
+        <div id="resume-editor" class="editor-panel" style="display:none;">
+          <div class="editor-head">
+            <div class="eh-title">📝 编辑简历 <span id="editor-title" class="eh-sub"></span></div>
+            <div class="eh-actions">
+              <button class="btn-mini" onclick="closeEditor()">取消</button>
+              <button class="btn-mini" onclick="saveResume()" style="background:#fff;color:#1a3c6e;border-color:#fff;">💾 保存</button>
+            </div>
+          </div>
+          <div class="editor-body">
+            <div class="form-group">
+              <label class="form-label" for="ed-title">简历标题</label>
+              <input id="ed-title" type="text" class="text-input" placeholder="例如：后端开发工程师简历">
+            </div>
+
+            <div class="ed-section" style="margin-top:0;border-top:none;padding-top:0;">
+              <div class="ed-section-title" style="margin-bottom:10px;">👤 个人信息</div>
+              <div class="ed-grid">
+                <div><label class="form-label">姓名</label><input id="ed-name" type="text" class="text-input"></div>
+                <div><label class="form-label">职位目标</label><input id="ed-target" type="text" class="text-input" placeholder="求职岗位"></div>
+                <div><label class="form-label">邮箱</label><input id="ed-email" type="text" class="text-input"></div>
+                <div><label class="form-label">电话</label><input id="ed-phone" type="text" class="text-input"></div>
+                <div class="span-2"><label class="form-label">个人简介</label><textarea id="ed-summary" rows="2" class="text-area" placeholder="一两句话介绍自己..."></textarea></div>
+              </div>
+            </div>
+
+            <div class="ed-section">
+              <div class="ed-section-head">
+                <div class="ed-section-title">🎓 教育经历</div>
+                <button class="btn-mini" onclick="addEntry('education')">+ 添加</button>
+              </div>
+              <div id="ed-education-list"></div>
+            </div>
+
+            <div class="ed-section">
+              <div class="ed-section-head">
+                <div class="ed-section-title">💼 工作 / 项目经历</div>
+                <button class="btn-mini" onclick="addEntry('experience')">+ 添加</button>
+              </div>
+              <div id="ed-experience-list"></div>
+            </div>
+
+            <div class="ed-section">
+              <div class="ed-section-head">
+                <div class="ed-section-title">🛠️ 技能</div>
+                <button class="btn-mini" onclick="addEntry('skills')">+ 添加</button>
+              </div>
+              <div id="ed-skills-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="diagnose-report" class="editor-panel" style="display:none;">
+          <div class="editor-head">
+            <div class="eh-title">🩺 AI 简历诊断报告</div>
+            <button class="btn-mini" onclick="document.getElementById('diagnose-report').style.display='none'">关闭 ✕</button>
+          </div>
+          <div class="sheet-body" style="max-height:70vh;" id="diagnose-body"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 收藏职位 ========== -->
+    <section class="page-section" id="sec-collected" style="display:none;">
+      <div class="page-content">
+        <div class="header">
+          <div class="page-head">
+            <div>
+              <div class="ph-title">⭐ 收藏职位</div>
+              <div class="ph-sub">收藏后可随时回来投递</div>
+            </div>
+          </div>
+        </div>
+        <div id="collected-list"></div>
+      </div>
+    </section>
+
+    <!-- ========== 投递记录 ========== -->
+    <section class="page-section" id="sec-applies" style="display:none;">
+      <div class="page-content">
+        <div class="header">
+          <div class="page-head">
+            <div>
+              <div class="ph-title">📬 投递记录</div>
+              <div class="ph-sub">直接在卡片上更新投递进度</div>
+            </div>
+          </div>
+        </div>
+        <div id="applies-list"></div>
+      </div>
+    </section>
+
+    <!-- ========== 个人中心 ========== -->
+    <section class="page-section" id="sec-me" style="display:none;">
+      <div class="page-content">
+        <div class="header">
+          <div class="page-head">
+            <div>
+              <div class="ph-title">👤 个人中心</div>
+            </div>
+          </div>
+        </div>
+        <div id="me-content"></div>
+      </div>
+    </section>
+
+    </main>
+
+    <!-- AI 匹配弹层（挂顶层，避免被隐藏区块遮挡） -->
+    <div id="match-panel" class="sheet">
+      <div class="sheet-panel">
+        <div class="sheet-head violet">
+          <div class="sheet-title">🎯 AI 匹配分析</div>
+          <button class="sheet-close" onclick="closeMatchPanel()">关闭 ✕</button>
+        </div>
+        <div class="sheet-body" id="match-body"></div>
+      </div>
+    </div>
+
+    <!-- 职位详情弹层 -->
+    <div id="job-detail-panel" class="sheet">
+      <div class="sheet-panel">
+        <div class="sheet-head">
+          <div class="sheet-title">💼 职位详情</div>
+          <button class="sheet-close" onclick="closeJobDetail()">关闭 ✕</button>
+        </div>
+        <div class="sheet-body" id="job-detail-body"></div>
+      </div>
+    </div>
+
+    <!-- 职位对比弹层 -->
+    <div id="compare-panel" class="sheet">
+      <div class="sheet-panel">
+        <div class="sheet-head deep">
+          <div class="sheet-title">⚖️ 职位对比</div>
+          <button class="sheet-close" onclick="closeCompare()">关闭 ✕</button>
+        </div>
+        <div class="sheet-body" id="compare-body"></div>
+      </div>
+    </div>
+
+    <!-- 回到顶部 -->
+    <div id="backTop" title="回到顶部">↑</div>
+
+    <!-- 职位对比底栏 -->
+    <div id="compareBar">
+      <span>⚖️ 已选 <span class="cmp-count">0</span> 个职位</span>
+      <span class="cmp-actions">
+        <button class="cmp-open">对比</button>
+        <button class="cmp-clear">清空</button>
+      </span>
+    </div>
+
+  </div>
+
+  <div class="fab-ai">
+    <span class="fab-icon">🤖</span>
+    <span>AI 助手</span>
+  </div>
+
+  <!-- 底部 Tab Bar -->
+  <div class="tabbar">
+    <div class="tab active" data-tab="home">
+      <div class="tab-icon">🏠</div><div>首页</div>
+    </div>
+    <div class="tab" data-tab="position">
+      <div class="tab-icon">💼</div><div>职位</div>
+    </div>
+    <div class="tab" data-tab="ai">
+      <div class="tab-icon">🤖</div><div>AI 助手</div>
+    </div>
+    <div class="tab" data-tab="recommend">
+      <div class="tab-icon">✨</div><div>AI 推荐</div>
+    </div>
+    <div class="tab" data-tab="me">
+      <div class="tab-icon">👤</div><div>我的</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/static/js/app.js?v=30"></script>
+</body>
+</html>
