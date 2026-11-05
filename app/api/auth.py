@@ -1,7 +1,8 @@
-"""认证路由：学生注册/登录、企业注册/登录、当前用户信息。"""
+"""认证路由：学生/管理员注册登录、企业注册登录、当前用户信息。"""
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel
 
 from app.config import settings
 from app.core.exceptions import success
@@ -18,6 +19,41 @@ from app.schemas.user import (
 from app.utils.security import create_access_token, hash_password, verify_password
 
 router = APIRouter()
+
+ADMIN_INVITE_CODE = "admin2026"
+
+
+class AdminRegister(BaseModel):
+    username: str
+    password: str
+    invite_code: str
+
+
+@router.post("/admin/register", response_model=dict)
+def register_admin(payload: AdminRegister):
+    if payload.invite_code != ADMIN_INVITE_CODE:
+        raise HTTPException(status_code=400, detail="管理员邀请码错误")
+    if len(payload.username) < 3:
+        raise HTTPException(status_code=400, detail="用户名至少 3 位")
+    if len(payload.password) < 6:
+        raise HTTPException(status_code=400, detail="密码至少 6 位")
+    db = SessionLocal()
+    try:
+        if db.query(User).filter(User.username == payload.username).first():
+            raise HTTPException(status_code=400, detail="用户名已存在")
+        admin = User(
+            username=payload.username,
+            password_hash=hash_password(payload.password),
+            role="admin",
+            ai_quota=99999,
+            resume_limit=99999,
+        )
+        db.add(admin)
+        db.commit()
+        db.refresh(admin)
+        return success({"user_id": admin.id, "role": "admin"})
+    finally:
+        db.close()
 
 
 @router.post("/register", response_model=dict)

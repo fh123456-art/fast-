@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
-    # LLM (DeepSeek via langchain-deepseek)，密钥只从 .env 读取
+    # LLM (DeepSeek via langchain-deepseek)
     DEEPSEEK_API_KEY: str = ""
     DEEPSEEK_API_BASE: str = "https://api.deepseek.com/v1"
     LLM_MODEL: str = "deepseek-chat"

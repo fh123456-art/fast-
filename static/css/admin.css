@@ -18,16 +18,17 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1e5bbf 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #5a3fa0 0%, #7b5cc7 100%);
   padding: 20px;
 }
 .login-box {
   width: 400px;
   max-width: 100%;
   background: #fff;
-  border-radius: 12px;
+  border: 2px solid #1f1b2e;
+  border-radius: 14px;
   padding: 40px 36px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  box-shadow: 6px 6px 0 #1f1b2e;
 }
 .login-logo { text-align: center; margin-bottom: 30px; }
 .logo-big { font-size: 44px; margin-bottom: 8px; }
@@ -45,22 +46,24 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 .login-form input:focus {
   outline: none;
-  border-color: #2b7de9;
-  box-shadow: 0 0 0 3px rgba(43,125,233,.12);
+  border-color: #7b5cc7;
+  box-shadow: 0 0 0 3px rgba(123,92,199,.12);
 }
 .btn-login {
   width: 100%;
   padding: 11px;
-  background: linear-gradient(90deg, #1e5bbf, #7c3aed);
+  background: #7b5cc7;
   color: #fff;
-  border: none;
-  border-radius: 8px;
+  border: 2px solid #1f1b2e;
+  border-radius: 10px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   margin-top: 8px;
-  transition: all .2s;
+  box-shadow: 4px 4px 0 #1f1b2e;
+  transition: transform .1s, box-shadow .1s;
 }
-.btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(30,91,191,.35); }
+.btn-login:hover { transform: translateY(-1px); }
+.btn-login:active { transform: translate(3px,3px); box-shadow: 1px 1px 0 #1f1b2e; }
 .btn-login:disabled { opacity: .7; cursor: not-allowed; transform: none; }
 .login-tip { text-align: center; font-size: 12px; color: #94a3b8; margin-top: 16px; }
 
@@ -107,9 +110,9 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 .nav-item:hover { background: rgba(255,255,255,.05); color: #fff; }
 .nav-item.active {
-  background: linear-gradient(90deg, rgba(43,125,233,.25), transparent);
+  background: linear-gradient(90deg, rgba(123,92,199,.25), transparent);
   color: #fff;
-  border-left-color: #2b7de9;
+  border-left-color: #7b5cc7;
 }
 .nav-item .ni { font-size: 15px; width: 18px; text-align: center; }
 
@@ -170,7 +173,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   top: 0; right: 0;
   width: 80px; height: 80px;
   border-radius: 50%;
-  background: rgba(43,125,233,.08);
+  background: rgba(123,92,199,.08);
   transform: translate(24px, -24px);
 }
 .stat-label { font-size: 12px; color: #64748b; }
@@ -200,6 +203,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 .panel-title { font-size: 15px; font-weight: 600; color: #1e293b; }
 .panel-tools { display: flex; gap: 8px; align-items: center; }
+.panel-body { padding: 16px 20px; }
 
 .quick-ops {
   padding: 20px;
@@ -211,17 +215,19 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 /* ===================== 按钮 ===================== */
 .btn-primary, .btn-info, .btn-warn, .btn-danger {
   padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
+  border: 2px solid #1f1b2e;
+  border-radius: 8px;
   font-size: 13px;
-  font-weight: 500;
-  transition: all .15s;
+  font-weight: 600;
+  transition: all .12s;
   color: #fff;
+  box-shadow: 2px 2px 0 #1f1b2e;
 }
-.btn-primary { background: linear-gradient(90deg, #2b7de9, #1e5bbf); }
-.btn-primary:hover { background: linear-gradient(90deg, #1e5bbf, #1a4ea0); }
-.btn-info { background: #7c3aed; }
-.btn-info:hover { background: #6d28d9; }
+.btn-primary { background: #7b5cc7; }
+.btn-primary:hover { background: #5a3fa0; }
+.btn-primary:active { transform: translate(2px,2px); box-shadow: 0 0 0 #1f1b2e; }
+.btn-info { background: #7b5cc7; }
+.btn-info:hover { background: #5a3fa0; }
 .btn-warn { background: #f59e0b; }
 .btn-warn:hover { background: #d97706; }
 .btn-danger { background: #ef4444; }
@@ -335,7 +341,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 .modal-form-row textarea { resize: vertical; min-height: 80px; }
 .modal-form-row input:focus, .modal-form-row textarea:focus {
-  outline: none; border-color: #2b7de9; box-shadow: 0 0 0 3px rgba(43,125,233,.12);
+  outline: none; border-color: #7b5cc7; box-shadow: 0 0 0 3px rgba(123,92,199,.12);
 }
 .modal-form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 
@@ -360,4 +366,25 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   .nav-item span:not(.ni) { display: none; }
   .brand-text { display: none; }
   .brand { justify-content: center; }
+}
+
+/* ===================== 简历详情弹窗 ===================== */
+.kv-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 20px; padding: 6px 0; }
+.kv-item { display: flex; gap: 8px; align-items: baseline; font-size: 13px; line-height: 1.6; }
+.kv-k { color: #94a3b8; min-width: 76px; flex-shrink: 0; }
+.kv-v { color: #0f172a; word-break: break-all; }
+.sub-title { font-weight: 600; font-size: 13px; color: #334155; border-left: 3px solid #7b5cc7; padding-left: 8px; margin-bottom: 4px; }
+.btn-info { background: #0ea5e9; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: background .15s; }
+.btn-info:hover { background: #0284c7; }
+
+/* ===================== 数据大屏 ===================== */
+.screen-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.screen-kpi { background: #fff; border: 2px solid #1f1b2e; border-radius: 14px; box-shadow: 4px 4px 0 #1f1b2e; padding: 16px 18px; }
+.screen-kpi .sk-label { font-size: 13px; color: #4a3f66; font-weight: 600; }
+.screen-kpi .sk-num { font-size: 30px; font-weight: 800; color: #1f1b2e; margin-top: 6px; line-height: 1.2; }
+.screen-chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.screen-chart-box { position: relative; height: 280px; margin-top: 12px; }
+@media (max-width: 1100px) {
+  .screen-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .screen-chart-grid { grid-template-columns: 1fr; }
 }

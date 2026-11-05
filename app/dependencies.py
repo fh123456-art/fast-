@@ -1,9 +1,9 @@
 """公共 FastAPI 依赖：数据库会话、当前用户、权限校验。"""
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Optional
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Query, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
@@ -11,15 +11,30 @@ from app.database import get_db
 from app.models.user import User
 from app.utils.security import decode_access_token
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
+
+
+def _resolve_token(request: Request, header_token: Optional[str]) -> str:
+    """同时支持 Authorization 请求头与 ?token=xxx query 参数（浏览器新窗口下载场景）。"""
+    if header_token:
+        return header_token
+    q_token = request.query_params.get("token")
+    if q_token:
+        return q_token
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not authenticated",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 DBSession = Annotated[Session, Depends(get_db)]
-Token = Annotated[str, Depends(oauth2_scheme)]
+HeaderToken = Annotated[Optional[str], Depends(oauth2_scheme)]
 
 
-def get_current_user(token: Token, db: DBSession) -> User:
+def get_current_user(request: Request, header_token: HeaderToken, db: DBSession) -> User:
     """解析 JWT，返回当前登录用户（学生 / 管理员 / 企业）。"""
+    token = _resolve_token(request, header_token)
     payload = decode_access_token(token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="无效或已过期的凭证")

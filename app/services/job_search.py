@@ -85,10 +85,15 @@ def _normalize_jobs(raw: Any) -> list[dict]:
     return jobs
 
 
-async def ai_search_jobs(keyword: str, max_items: int = 15) -> list[dict]:
+async def ai_search_jobs(keyword: str, max_items: int = 15, city: str | None = None) -> list[dict]:
     """联网搜索关键词对应的真实岗位，返回结构化列表。"""
-    user = f"请联网搜索与「{keyword}」相关的最新真实岗位，尽可能多地返回（至少 {max_items} 条以上），来自不同公司不同岗位方向。"
+    loc = f"在「{city}」地区" if city and city != "全国" else "在全国各地"
+    user = f"请联网搜索{loc}与「{keyword}」相关的最新真实岗位，尽可能多地返回（至少 {max_items} 条以上），来自不同公司不同岗位方向。"
     text = await chat_complete(SYSTEM_PROMPT, user, temperature=0.4, enable_search=True)
     data = parse_json_output(text)
     jobs = _normalize_jobs(data)
+    if city and city != "全国":
+        for j in jobs:
+            if not j.get("city") or j["city"] == "全国":
+                j["city"] = city
     return jobs[:max_items]

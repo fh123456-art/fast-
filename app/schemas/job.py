@@ -46,7 +46,7 @@ class JobPositionOut(BaseModel):
 
 class JobApplyCreate(BaseModel):
     job_id: int
-    resume_id: int
+    resume_id: int | None = None
 
 
 class JobApplyOut(BaseModel):

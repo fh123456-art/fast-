@@ -18,10 +18,10 @@ seq2seq翻译实验/
 录屏演示/
 
 # 本地草稿与临时文件
-_*.py
-_*.txt
-_*.docx
-_*.log
+/_*.py
+/_*.txt
+/_*.docx
+/_*.log
 课程设计实验报告.md
 er_conceptual.png
 

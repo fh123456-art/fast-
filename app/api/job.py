@@ -70,7 +70,7 @@ def search_jobs(
         like = f"%{keyword}%"
         q = q.filter(or_(JobPosition.title.like(like), JobPosition.description.like(like)))
     if city:
-        q = q.filter(JobPosition.city == city)
+        q = q.filter(JobPosition.city.like(f"%{city}%"))
     if category:
         q = q.filter(JobPosition.category == category)
     if job_type:
@@ -163,11 +163,16 @@ def _local_search(db: Session, keyword: str) -> list[JobPosition]:
 @router.get("/ai-search", response_model=list[dict])
 async def ai_search_jobs(
     keyword: str = Query(..., min_length=1),
+    city: str | None = Query(None, description="可选：限定搜索的城市/地区"),
     db: Session = Depends(get_db),
 ):
-    """AI 联网搜职位：跳过本地数据库，直接调用 LLM 联网搜索最新真实岗位并入库缓存。"""
+    """AI 联网搜职位：跳过本地数据库，直接调用 LLM 联网搜索最新真实岗位并入库缓存。
+    传入 city 会定向到该城市搜索，返回的岗位 city 字段会自动补充。"""
+    search_keyword = keyword
+    if city:
+        search_keyword = f"{city} {keyword}" if keyword else city
     try:
-        result = await run_graph("job_search", keyword=keyword)
+        result = await run_graph("job_search", keyword=search_keyword)
     except Exception:
         result = {}
     raw_jobs = result.get("job_search_results") or []
@@ -190,12 +195,13 @@ async def ai_search_jobs(
         if existing:
             continue
         ent = _ensure_enterprise(db, company)
+        job_city = item.get("city") or city
         new_rows.append(
             JobPosition(
                 enterprise_id=ent.id,
                 title=item.get("title", ""),
                 company=company,
-                city=item.get("city") or None,
+                city=job_city or None,
                 salary_min=item.get("salary_min") or None,
                 salary_max=item.get("salary_max") or None,
                 experience=item.get("experience") or None,
@@ -220,10 +226,11 @@ async def ai_search_jobs(
 @router.get("/ai-recommend", response_model=list[dict])
 async def ai_recommend_jobs(
     resume_id: int | None = Query(None, description="简历ID，不传则用用户最新简历"),
+    city: str | None = Query(None, description="可选：限定推荐城市/地区"),
     user: CurrentUser = None,
     db: Session = Depends(get_db),
 ):
-    """AI 智能推荐：根据简历联网搜岗 + 逐岗位匹配打分 + 排序返回。"""
+    """AI 智能推荐：根据简历联网搜岗 + 合并本地DB + 逐岗位匹配打分 + 排序返回。"""
     if user is None:
         raise HTTPException(status_code=401, detail="请先登录")
 
@@ -250,13 +257,20 @@ async def ai_recommend_jobs(
     content.setdefault("education", user.education or "")
     content.setdefault("major", user.major or "")
 
-    results = await recommend_for_resume(content)
+    results = await recommend_for_resume(content, city=city, db=db)
     return results
 
 
 @router.get("/recommend", response_model=list[dict])
-async def recommend_jobs(user: CurrentUser, db: Session = Depends(get_db)):
-    rows = db.query(JobPosition).filter(JobPosition.status == "approved").limit(50).all()
+async def recommend_jobs(
+    user: CurrentUser,
+    city: str | None = Query(None, description="可选：限定推荐城市"),
+    db: Session = Depends(get_db),
+):
+    q = db.query(JobPosition).filter(JobPosition.status == "approved")
+    if city:
+        q = q.filter(JobPosition.city.like(f"%{city}%"))
+    rows = q.limit(50).all()
     major = (user.major or "").lower()
     education = user.education or ""
     scored = []
@@ -304,13 +318,24 @@ def collect_job(job_id: int, user: CurrentUser, db: Session = Depends(get_db)):
 
 
 @router.post("/{job_id}/match", response_model=JobMatchOut)
-async def match_job(job_id: int, resume_id: int = Query(...), user: CurrentUser = None, db: Session = Depends(get_db)):
+async def match_job(job_id: int, resume_id: int | None = Query(None), user: CurrentUser = None, db: Session = Depends(get_db)):
     if user.ai_quota <= 0:
         raise HTTPException(status_code=403, detail="AI 调用次数已用尽")
     job = db.get(JobPosition, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="岗位不存在")
-    resume = db.get(Resume, resume_id)
+    rid = resume_id
+    if rid is None:
+        latest = (
+            db.query(Resume)
+            .filter(Resume.user_id == user.id)
+            .order_by(Resume.updated_at.desc())
+            .first()
+        )
+        if not latest:
+            raise HTTPException(status_code=400, detail="请先上传简历后再匹配")
+        rid = latest.id
+    resume = db.get(Resume, rid)
     if not resume or resume.user_id != user.id:
         raise HTTPException(status_code=404, detail="简历不存在")
     content = json.loads(resume.content) if resume.content else {}

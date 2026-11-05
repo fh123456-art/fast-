@@ -40,6 +40,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def no_cache_static(request, call_next):
+    response = await call_next(request)
+    p = request.url.path
+    if p.startswith("/static/") or p.endswith(".html") or p in ("/",):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 register_exception_handlers(app)
 
 app.include_router(api_router, prefix="/api")
@@ -49,7 +60,12 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 @app.get("/")
 def index() -> FileResponse:
-    return FileResponse(str(STATIC_DIR / "index.html"))
+    html_path = STATIC_DIR / "index.html"
+    js_ts = int((STATIC_DIR / "js" / "app.js").stat().st_mtime)
+    html = html_path.read_text(encoding="utf-8")
+    html = html.replace("app.js?v=20261026e", f"app.js?v={js_ts}")
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html)
 
 
 @app.get("/login")

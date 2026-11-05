@@ -34,15 +34,27 @@ def apply_job(payload: JobApplyCreate, user: CurrentUser, db: Session = Depends(
     job = db.get(JobPosition, payload.job_id)
     if not job:
         raise HTTPException(status_code=404, detail="岗位不存在")
-    resume = db.get(Resume, payload.resume_id)
-    if not resume or resume.user_id != user.id:
-        raise HTTPException(status_code=404, detail="简历不存在")
+    resume_id = payload.resume_id
+    if resume_id is None:
+        latest = (
+            db.query(Resume)
+            .filter(Resume.user_id == user.id)
+            .order_by(Resume.updated_at.desc())
+            .first()
+        )
+        if not latest:
+            raise HTTPException(status_code=400, detail="请先上传简历后再投递")
+        resume_id = latest.id
+    else:
+        resume = db.get(Resume, resume_id)
+        if not resume or resume.user_id != user.id:
+            raise HTTPException(status_code=404, detail="简历不存在")
     existing = db.query(JobApply).filter(
         JobApply.user_id == user.id, JobApply.job_id == payload.job_id
     ).first()
     if existing:
         raise HTTPException(status_code=400, detail="已投递过该岗位")
-    apply = JobApply(user_id=user.id, job_id=payload.job_id, resume_id=payload.resume_id)
+    apply = JobApply(user_id=user.id, job_id=payload.job_id, resume_id=resume_id)
     db.add(apply)
     db.commit()
     return success({"id": apply.id})

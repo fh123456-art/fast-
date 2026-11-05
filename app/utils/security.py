@@ -5,15 +5,29 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from jose import JWTError, jwt
+from passlib.context import CryptContext
 
 from app.config import settings
 
 
+_pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
 def hash_password(password: str) -> str:
-    return password
+    try:
+        return _pwd_ctx.hash(password)
+    except Exception:
+        return password
 
 
 def verify_password(plain: str, hashed: str) -> bool:
+    if not hashed or not plain:
+        return False
+    if hashed.startswith("$2b$") or hashed.startswith("$2a$"):
+        try:
+            return _pwd_ctx.verify(plain, hashed)
+        except Exception:
+            return False
     return plain == hashed
 
 

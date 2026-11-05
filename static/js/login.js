@@ -2,9 +2,10 @@
   const API = "/api";
 
   let selectedRole = "student";
+  let regRole = "student";
 
-  /* ========== 角色 Tab 切换 ========== */
-  const tabs = document.querySelectorAll(".role-tab");
+  /* ========== 登录角色 Tab 切换 ========== */
+  const tabs = document.querySelectorAll(".role-tab[data-role]");
   const tipBar = document.getElementById("loginTipBar");
 
   tabs.forEach(function (tab) {
@@ -96,7 +97,42 @@
   const closeBtn = document.getElementById("closeRegister");
   const mask = modal.querySelector(".modal-mask");
 
-  function openRegister() { modal.classList.add("show"); }
+  const regTabs = document.querySelectorAll("#regRoleTabs .role-tab");
+  const studentFields = document.getElementById("regStudentFields");
+  const adminFields = document.getElementById("regAdminFields");
+  const inviteCodeInput = document.getElementById("reg_invite_code");
+  const regSubmitBtn = document.getElementById("regSubmitBtn");
+  const regTitle = document.getElementById("regTitle");
+
+  function switchRegRole(role) {
+    regRole = role;
+    regTabs.forEach(function (t) { t.classList.remove("active"); });
+    document.querySelector('#regRoleTabs .role-tab[data-role="' + role + '"]').classList.add("active");
+    if (role === "student") {
+      studentFields.style.display = "";
+      adminFields.style.display = "none";
+      inviteCodeInput.removeAttribute("required");
+      regSubmitBtn.textContent = "学生注册";
+      regTitle.textContent = "学生注册";
+    } else {
+      studentFields.style.display = "none";
+      adminFields.style.display = "";
+      inviteCodeInput.setAttribute("required", "");
+      regSubmitBtn.textContent = "管理员注册";
+      regTitle.textContent = "管理员注册";
+    }
+  }
+
+  regTabs.forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      switchRegRole(tab.getAttribute("data-role"));
+    });
+  });
+
+  function openRegister() {
+    switchRegRole("student");
+    modal.classList.add("show");
+  }
   function closeRegister() { modal.classList.remove("show"); }
 
   openBtn.addEventListener("click", function (e) {
@@ -114,11 +150,6 @@
     const username = document.getElementById("reg_username").value.trim();
     const password = document.getElementById("reg_password").value;
     const password2 = document.getElementById("reg_password2").value;
-    const real_name = document.getElementById("reg_real_name").value.trim();
-    const school = document.getElementById("reg_school").value.trim();
-    const major = document.getElementById("reg_major").value.trim();
-    const education = document.getElementById("reg_education").value;
-    const gy = document.getElementById("reg_graduate_year").value;
 
     if (username.length < 3) { alert("用户名至少 3 位"); return; }
     if (password.length < 6) { alert("密码至少 6 位"); return; }
@@ -128,15 +159,30 @@
     btn.disabled = true;
     btn.textContent = "注册中...";
 
-    const payload = { username, password };
-    if (real_name) payload.real_name = real_name;
-    if (school) payload.school = school;
-    if (major) payload.major = major;
-    if (education) payload.education = education;
-    if (gy) payload.graduate_year = parseInt(gy, 10);
+    let payload = { username, password };
+    let url;
+
+    if (regRole === "admin") {
+      const invite_code = document.getElementById("reg_invite_code").value.trim();
+      if (!invite_code) { alert("请填写管理员邀请码"); btn.disabled = false; btn.textContent = "管理员注册"; return; }
+      payload.invite_code = invite_code;
+      url = `${API}/auth/admin/register`;
+    } else {
+      const real_name = document.getElementById("reg_real_name").value.trim();
+      const school = document.getElementById("reg_school").value.trim();
+      const major = document.getElementById("reg_major").value.trim();
+      const education = document.getElementById("reg_education").value;
+      const gy = document.getElementById("reg_graduate_year").value;
+      if (real_name) payload.real_name = real_name;
+      if (school) payload.school = school;
+      if (major) payload.major = major;
+      if (education) payload.education = education;
+      if (gy) payload.graduate_year = parseInt(gy, 10);
+      url = `${API}/auth/register`;
+    }
 
     try {
-      const resp = await fetch(`${API}/auth/register`, {
+      const resp = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -144,7 +190,11 @@
 
       const data = await resp.json();
       if (resp.ok) {
-        alert("注册成功！请使用账号登录。");
+        if (regRole === "admin") {
+          alert("管理员注册成功！请使用账号密码登录。");
+        } else {
+          alert("学生注册成功！请使用账号登录。");
+        }
         closeRegister();
         document.getElementById("username").value = username;
         regForm.reset();
@@ -155,7 +205,7 @@
       alert("网络错误：" + err.message);
     } finally {
       btn.disabled = false;
-      btn.textContent = "立即注册";
+      btn.textContent = regRole === "admin" ? "管理员注册" : "学生注册";
     }
   });
 

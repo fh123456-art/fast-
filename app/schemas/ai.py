@@ -38,6 +38,12 @@ class AiBadCaseOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class SystemMessageCreate(BaseModel):
+    title: str
+    content: str
+    target_role: str = "all"
+
+
 class SystemMessageOut(BaseModel):
     id: int
     title: str

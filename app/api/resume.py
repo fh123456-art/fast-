@@ -199,6 +199,40 @@ async def polish_resume_segment(
     return success({"polished": polished})
 
 
+@router.post("/{resume_id}/cover-letter", response_model=dict)
+async def generate_cover_letter_for_job(
+    resume_id: int,
+    job_id: int = Query(...),
+    user: CurrentUser = None,
+    db: Session = Depends(get_db),
+):
+    """AI 定制求职信：结合简历真实经历与岗位 JD 生成，扣 1 次 AI 配额，不落库。"""
+    if user.ai_quota <= 0:
+        raise HTTPException(status_code=403, detail="AI 调用次数已用尽")
+    from app.models.job import JobPosition
+    from app.services.cover_letter import generate_cover_letter
+
+    resume = db.get(Resume, resume_id)
+    if not resume or resume.user_id != user.id:
+        raise HTTPException(status_code=404, detail="简历不存在")
+    job = db.get(JobPosition, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="岗位不存在")
+    job_info = {
+        "title": job.title,
+        "company": job.company,
+        "city": job.city,
+        "job_type": job.job_type,
+        "description": job.description,
+        "requirement": job.requirement,
+    }
+    content = json.loads(resume.content) if resume.content else {}
+    result = await generate_cover_letter(content, job_info)
+    user.ai_quota -= 1
+    db.commit()
+    return success(result)
+
+
 @router.get("/{resume_id}/export")
 def export_resume_pdf(resume_id: int, user: CurrentUser, db: Session = Depends(get_db)):
     """简历预览、导出 PDF。"""
@@ -266,19 +300,33 @@ async def analyze_resume_skills(resume_id: int, user: CurrentUser, db: Session =
     content = json.loads(resume.content) if resume.content else {}
     text = json.dumps(content, ensure_ascii=False)[:4000]
 
-    from app.services.llm_client import chat_complete, parse_json_output
-    raw = await chat_complete(SKILLS_PROMPT, text, temperature=0.3, json_mode=True)
-    parsed = parse_json_output(raw)
+    defaults = {
+        "dimensions": ["技术熟练度", "项目经验", "教育背景", "实习经历", "软技能", "岗位匹配"],
+        "scores": [60, 60, 60, 60, 60, 60],
+        "summary": "AI 暂时不可用，已给出默认评分。请稍后重试。",
+        "level": "初级",
+        "avg_score": 60,
+        "strengths": [],
+        "improvements": [],
+        "advice": "",
+    }
 
-    if not isinstance(parsed, dict):
-        parsed = {"dimensions": ["技术熟练度", "项目经验", "教育背景", "实习经历", "软技能", "岗位匹配"], "scores": [60, 60, 60, 60, 60, 60], "summary": "AI 分析中..."}
+    try:
+        from app.services.llm_client import chat_complete, parse_json_output
+        raw = await chat_complete(SKILLS_PROMPT, text, temperature=0.3, json_mode=True)
+        parsed = parse_json_output(raw)
+        if not isinstance(parsed, dict):
+            parsed = {}
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("AI skills analyze failed: %s", e)
+        return success(defaults)
 
     dims = parsed.get("dimensions") or []
     scores = parsed.get("scores") or []
     if len(dims) != 6 or len(scores) != 6:
-        defaults = ["技术熟练度", "项目经验", "教育背景", "实习经历", "软技能", "岗位匹配"]
-        dims = (dims + defaults)[:6]
-        scores = [int(s) if isinstance(s, (int, float)) else 60 for s in (scores + [60] * 6)[:6]]
+        dims = (list(dims) + defaults["dimensions"])[:6]
+        scores = [int(s) if isinstance(s, (int, float)) else 60 for s in (list(scores) + [60] * 6)[:6]]
     else:
         scores = [max(0, min(100, int(s))) for s in scores]
 
@@ -298,7 +346,7 @@ async def analyze_resume_skills(resume_id: int, user: CurrentUser, db: Session =
     return success({
         "dimensions": dims,
         "scores": scores,
-        "summary": str(parsed.get("summary", ""))[:200],
+        "summary": str(parsed.get("summary", ""))[:200] or defaults["summary"],
         "level": lvl,
         "avg_score": round(avg, 1),
         "strengths": strengths,

@@ -4,15 +4,60 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>登录 - JobMatch AI  大学生智能求职推荐系统</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=23" />
+  <link rel="stylesheet" href="/static/css/style.css?v=14" />
+  <style>
+    .role-tabs {
+      display: flex;
+      margin-bottom: 18px;
+      background: #fff;
+      border: 2px solid #1f1b2e;
+      border-radius: 12px;
+      padding: 4px;
+      box-shadow: 3px 3px 0 #1f1b2e;
+    }
+    .role-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #5b5470;
+      cursor: pointer;
+      transition: all .2s ease;
+      user-select: none;
+    }
+    .role-tab.active {
+      background: #f6d34d;
+      color: #1f1b2e;
+      font-weight: 800;
+      border: 2px solid #1f1b2e;
+    }
+    .role-tab .rt-icon { margin-right: 6px; }
+    .login-tip-bar {
+      background: #efeafc;
+      border: 2px solid #1f1b2e;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: #2a2140;
+      line-height: 1.6;
+    }
+    .login-tip-bar.admin-tip {
+      background: #fff4d6;
+      border-color: #1f1b2e;
+      color: #9a3412;
+    }
+  </style>
 </head>
 <body>
-  <div class="app login-app">
+  <div class="app">
     <div class="login-wrap">
       <div class="login-logo">
         <div class="ll-icon">业</div>
-        <h1>JobMatch AI</h1>
-        <p>大学生智能求职推荐系统 · 求职一站式服务</p>
+        <h1>JobMatch AI  大学生智能求职推荐系统</h1>
+        <p>高校生求职 一站式服务</p>
       </div>
 
       <div class="role-tabs">
@@ -62,8 +107,16 @@
     <div class="modal-mask"></div>
     <div class="modal-box">
       <div class="modal-header">
-        <div class="modal-title">学生注册</div>
+        <div class="modal-title" id="regTitle">学生注册</div>
         <span class="modal-close" id="closeRegister">×</span>
+      </div>
+      <div class="role-tabs" id="regRoleTabs" style="margin:0 20px 14px;">
+        <div class="role-tab active" data-role="student">
+          <span class="rt-icon">🎓</span>学生注册
+        </div>
+        <div class="role-tab" data-role="admin">
+          <span class="rt-icon">🛡️</span>管理员注册
+        </div>
       </div>
       <form id="registerForm">
         <div class="form-group">
@@ -75,32 +128,49 @@
         <div class="form-group">
           <input type="password" id="reg_password2" placeholder="确认密码" required />
         </div>
-        <div class="form-group">
-          <input type="text" id="reg_real_name" placeholder="真实姓名（选填）" />
+
+        <!-- 学生注册字段 -->
+        <div id="regStudentFields">
+          <div class="form-group">
+            <input type="text" id="reg_real_name" placeholder="真实姓名（选填）" />
+          </div>
+          <div class="form-group">
+            <input type="text" id="reg_school" placeholder="学校（选填）" />
+          </div>
+          <div class="form-group">
+            <input type="text" id="reg_major" placeholder="专业（选填）" />
+          </div>
+          <div class="form-group">
+            <select id="reg_education">
+              <option value="">学历（选填）</option>
+              <option value="大专">大专</option>
+              <option value="本科">本科</option>
+              <option value="硕士">硕士</option>
+              <option value="博士">博士</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <input type="number" id="reg_graduate_year" placeholder="毕业年份（选填，如 2026）" />
+          </div>
         </div>
-        <div class="form-group">
-          <input type="text" id="reg_school" placeholder="学校（选填）" />
+
+        <!-- 管理员注册字段 -->
+        <div id="regAdminFields" style="display:none;">
+          <div class="form-group">
+            <input type="text" id="reg_invite_code" placeholder="管理员邀请码 *" required />
+          </div>
+          <div style="font-size:12px;color:#9a3412;margin-bottom:12px;padding:8px 12px;background:#fff4d6;border-radius:10px;border:2px solid #1f1b2e;">
+            🛡️ 管理员账号拥有全部系统权限，请谨慎注册。<br>
+            默认邀请码：<code style="background:#fff;padding:1px 6px;border-radius:3px;font-family:monospace;">admin2026</code>
+          </div>
         </div>
-        <div class="form-group">
-          <input type="text" id="reg_major" placeholder="专业（选填）" />
-        </div>
-        <div class="form-group">
-          <select id="reg_education">
-            <option value="">学历（选填）</option>
-            <option value="大专">大专</option>
-            <option value="本科">本科</option>
-            <option value="硕士">硕士</option>
-            <option value="博士">博士</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <input type="number" id="reg_graduate_year" placeholder="毕业年份（选填，如 2026）" />
-        </div>
-        <button type="submit" class="btn-primary">立即注册</button>
+
+        <button type="submit" class="btn-primary" id="regSubmitBtn">学生注册</button>
       </form>
     </div>
   </div>
 
-  <script src="/static/js/login.js?v=11"></script>
+  <script src="/static/js/toast.js?v=20261024a"></script>
+  <script src="/static/js/login.js?v=15"></script>
 </body>
 </html>

@@ -1,10 +1,14 @@
-"""AI 智能推荐：简历关键词提取 → 联网搜岗 → 逐岗位匹配打分 → 排序返回。"""
+"""AI 智能推荐：简历关键词提取 → 联网搜岗 → 合并本地DB → 逐岗位匹配打分 → 排序返回。"""
 from __future__ import annotations
 
 import asyncio
 import json
 from typing import Any
 
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
+from app.models import JobPosition
 from app.services.job_match import match_resume_to_job
 from app.services.job_search import ai_search_jobs
 from app.services.llm_client import chat_complete, parse_json_output
@@ -29,15 +33,49 @@ async def extract_search_keywords(resume_content: dict) -> list[str]:
     return []
 
 
+def _normalize_local_job(j: JobPosition) -> dict:
+    """把 DB JobPosition ORM 对象转成 ai_search_jobs 风格的 dict 便于统一打分。"""
+    return {
+        "id": j.id,
+        "source": "local",
+        "company": j.company or "",
+        "title": j.title or "",
+        "city": j.city or "全国",
+        "salary_min": j.salary_min,
+        "salary_max": j.salary_max,
+        "experience": j.experience or "",
+        "education": j.education or "",
+        "job_type": j.job_type or "全职",
+        "category": j.category or "",
+        "description": (j.description or "")[:200],
+        "requirement": (j.requirement or "")[:200],
+        "skills": json.loads(j.skills) if j.skills else [],
+    }
+
+
+def _fetch_local_candidates(db: Session, city: str | None, limit: int = 25) -> list[dict]:
+    """从本地 DB 拉已审核岗位，若指定 city 则优先匹配该城市。"""
+    q = db.query(JobPosition).filter(JobPosition.status == "approved")
+    if city and city != "全国":
+        q = q.filter(or_(JobPosition.city == city, JobPosition.city.like(f"%{city}%")))
+    rows = q.order_by(JobPosition.created_at.desc()).limit(limit).all()
+    return [_normalize_local_job(j) for j in rows if j.title and j.company]
+
+
 async def recommend_for_resume(
-    resume_content: dict, max_candidates: int = 15, top_k: int = 10
+    resume_content: dict,
+    max_candidates: int = 20,
+    top_k: int = 10,
+    city: str | None = None,
+    db: Session | None = None,
 ) -> list[dict[str, Any]]:
     """
     完整流程：
     1. 从简历抽关键词
-    2. 每个关键词联网搜岗 → 合并去重 → 候选池
-    3. 对每个候选岗并发 LLM 匹配打分
-    4. 按分排序 top_k
+    2. 每个关键词并发联网搜岗（可选限定 city）→ 合并去重 → 候选池
+    3. 合并本地 DB 已审核岗位作为候选
+    4. 对每个候选岗并发 LLM 匹配打分
+    5. 按分排序 top_k
     """
     keywords = await extract_search_keywords(resume_content)
     if not keywords:
@@ -47,23 +85,37 @@ async def recommend_for_resume(
         combined = f"{summary} {exp} {skills}".strip() or "Java Python 后端 前端"
         keywords = [combined[:80]]
 
+    tasks = [ai_search_jobs(kw, max_items=8, city=city) for kw in keywords]
+    try:
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+    except Exception:
+        results = []
+
     seen: set[tuple[str, str]] = set()
     candidates: list[dict] = []
-    for kw in keywords:
-        try:
-            jobs = await ai_search_jobs(kw, max_items=8)
-        except Exception:
+
+    for jobs in results:
+        if isinstance(jobs, Exception) or not isinstance(jobs, list):
             continue
         for j in jobs:
             key = (j.get("company", ""), j.get("title", ""))
             if key in seen or not j.get("title"):
                 continue
             seen.add(key)
+            j["source"] = j.get("source", "ai")
             candidates.append(j)
-            if len(candidates) >= max_candidates:
+            if len(candidates) >= max_candidates * 2:
                 break
-        if len(candidates) >= max_candidates:
+        if len(candidates) >= max_candidates * 2:
             break
+
+    if db is not None:
+        for j in _fetch_local_candidates(db, city, limit=max_candidates):
+            key = (j.get("company", ""), j.get("title", ""))
+            if key in seen:
+                continue
+            seen.add(key)
+            candidates.append(j)
 
     resume_for_match = {
         "name": resume_content.get("name", ""),
@@ -93,8 +145,9 @@ async def recommend_for_resume(
             job_copy["risk_hint"] = m.get("risk_hint", "")
             return job_copy
 
-    tasks = [_one_score(j) for j in candidates[:max_candidates]]
-    scored = await asyncio.gather(*tasks, return_exceptions=True)
+    top_pool = candidates[:max_candidates]
+    tasks2 = [_one_score(j) for j in top_pool]
+    scored = await asyncio.gather(*tasks2, return_exceptions=True)
     scored = [s for s in scored if isinstance(s, dict)]
 
     scored.sort(key=lambda x: x.get("match_score", 0), reverse=True)

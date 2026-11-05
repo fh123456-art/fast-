@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
@@ -35,12 +35,16 @@
       <a class="nav-item active" data-key="dashboard" href="#">
         <span class="ni">📊</span><span>仪表盘</span>
       </a>
+      <a class="nav-item" data-key="screen" href="#">
+        <span class="ni">🖥️</span><span>数据大屏</span>
+      </a>
 
       <div class="nav-group">用户与内容</div>
       <a class="nav-item" data-key="users" href="#"><span class="ni">👥</span><span>用户管理</span></a>
       <a class="nav-item" data-key="enterprises" href="#"><span class="ni">🏢</span><span>企业审核</span></a>
       <a class="nav-item" data-key="jobs" href="#"><span class="ni">💼</span><span>岗位审核</span></a>
       <a class="nav-item" data-key="resumes" href="#"><span class="ni">📄</span><span>简历审核</span></a>
+      <a class="nav-item" data-key="reviews" href="#"><span class="ni">💬</span><span>用户点评</span></a>
 
       <div class="nav-group">AI 与题库</div>
       <a class="nav-item" data-key="prompts" href="#"><span class="ni">🧠</span><span>Prompt 模板</span></a>
@@ -48,6 +52,7 @@
       <a class="nav-item" data-key="exam-bank" href="#"><span class="ni">📝</span><span>笔试题库</span></a>
       <a class="nav-item" data-key="feedback" href="#"><span class="ni">👍</span><span>AI 用户反馈</span></a>
       <a class="nav-item" data-key="bad-cases" href="#"><span class="ni">🐞</span><span>坏案例库</span></a>
+      <a class="nav-item" data-key="ai-usage" href="#"><span class="ni">📈</span><span>AI 使用情况</span></a>
 
       <div class="nav-group">平台运营</div>
       <a class="nav-item" data-key="messages" href="#"><span class="ni">📢</span><span>系统公告</span></a>
@@ -121,6 +126,38 @@
         </div>
       </div>
 
+      <!-- 数据大屏 -->
+      <div class="page" id="page-screen" style="display:none;">
+        <div class="screen-kpi-grid">
+          <div class="screen-kpi"><div class="sk-label">👨‍ 注册学生</div><div class="sk-num" id="sc-students">-</div></div>
+          <div class="screen-kpi"><div class="sk-label">🏢 入驻企业</div><div class="sk-num" id="sc-enterprises">-</div></div>
+          <div class="screen-kpi"><div class="sk-label">💼 在招岗位</div><div class="sk-num" id="sc-jobs">-</div></div>
+          <div class="screen-kpi"><div class="sk-label">📄 简历总数</div><div class="sk-num" id="sc-resumes">-</div></div>
+          <div class="screen-kpi"><div class="sk-label">📬 求职投递</div><div class="sk-num" id="sc-applies">-</div></div>
+          <div class="screen-kpi"><div class="sk-label">🤖 完成面试</div><div class="sk-num" id="sc-interviews">-</div></div>
+          <div class="screen-kpi"><div class="sk-label">📝 完成笔试</div><div class="sk-num" id="sc-exams">-</div></div>
+          <div class="screen-kpi"><div class="sk-label">👍 AI 好评率</div><div class="sk-num" id="sc-likerate">-</div></div>
+        </div>
+        <div class="screen-chart-grid">
+          <div class="panel screen-chart-card">
+            <div class="panel-title">📈 近 7 天新增学生</div>
+            <div class="screen-chart-box"><canvas id="scLineStudents"></canvas></div>
+          </div>
+          <div class="panel screen-chart-card">
+            <div class="panel-title">🍩 岗位分类分布</div>
+            <div class="screen-chart-box"><canvas id="scDoughnutCats"></canvas></div>
+          </div>
+          <div class="panel screen-chart-card">
+            <div class="panel-title">🥧 投递状态占比</div>
+            <div class="screen-chart-box"><canvas id="scPieApply"></canvas></div>
+          </div>
+          <div class="panel screen-chart-card">
+            <div class="panel-title">🏙️ 热门城市 TOP8</div>
+            <div class="screen-chart-box"><canvas id="scBarCities"></canvas></div>
+          </div>
+        </div>
+      </div>
+
       <!-- 用户管理 -->
       <div class="page" id="page-users" style="display:none;">
         <div class="panel">
@@ -147,6 +184,7 @@
           <div class="panel-head">
             <div class="panel-title">🏢 企业账号审核</div>
             <div class="panel-tools">
+              <button class="btn-primary btn-sm" onclick="openCreateEntForm()">➕ 注册企业</button>
               <select id="entStatus" onchange="loadEnterprises()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
                 <option value="">全部状态</option>
                 <option value="pending">待审核</option>
@@ -170,7 +208,9 @@
           <div class="panel-head">
             <div class="panel-title">💼 岗位审核</div>
             <div class="panel-tools">
+              <button class="btn-primary btn-sm" onclick="openCreateJobForm()">➕ 发布岗位</button>
               <select id="jobStatus" onchange="loadJobsAudit()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">全部状态</option>
                 <option value="pending">待审核</option>
                 <option value="approved">已通过</option>
                 <option value="rejected">已下架</option>
@@ -192,7 +232,9 @@
           <div class="panel-head">
             <div class="panel-title">📄 简历审核</div>
             <div class="panel-tools">
+              <input id="resumeKeyword" placeholder="🔍 搜索标题/用户名/姓名..." onkeydown="if(event.key==='Enter')loadResumesAudit()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:220px;" />
               <select id="resumeStatus" onchange="loadResumesAudit()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">全部状态</option>
                 <option value="draft">草稿</option>
                 <option value="published">已发布</option>
                 <option value="rejected">已退回</option>
@@ -201,9 +243,46 @@
           </div>
           <table class="data-table">
             <thead><tr>
-              <th>ID</th><th>用户ID</th><th>简历标题</th><th>状态</th><th>创建时间</th><th>操作</th>
+              <th>ID</th><th>用户</th><th>学校/专业</th><th>简历标题</th><th>个人简介</th><th>状态</th><th>更新时间</th><th>操作</th>
             </tr></thead>
             <tbody id="resumeTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 用户点评（企业 & 岗位） -->
+      <div class="page" id="page-reviews" style="display:none;">
+        <div id="reviewStats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;"></div>
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">💬 用户点评管理（企业点评 & 岗位点评）</div>
+            <div class="panel-tools">
+              <input id="reviewKeyword" placeholder="🔍 按用户名或点评内容搜索" onkeydown="if(event.key==='Enter')loadReviews()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:220px;" />
+              <select id="reviewTarget" onchange="loadReviews()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">全部类型</option>
+                <option value="enterprise">🏢 企业点评</option>
+                <option value="job">💼 岗位点评</option>
+              </select>
+              <select id="reviewRating" onchange="loadReviews()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">全部态度</option>
+                <option value="1">👍 点赞</option>
+                <option value="-1">👎 点踩</option>
+                <option value="0">💬 仅点评</option>
+              </select>
+              <select id="reviewStatus" onchange="loadReviews()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">全部状态</option>
+                <option value="approved">已通过</option>
+                <option value="pending">待审核</option>
+                <option value="rejected">已拒绝</option>
+              </select>
+              <button class="btn-primary btn-sm" onclick="loadReviews()">🔄 刷新</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr>
+              <th>ID</th><th>用户</th><th>类型</th><th>点评对象</th><th>态度</th><th>评论内容</th><th>状态</th><th>时间</th><th>操作</th>
+            </tr></thead>
+            <tbody id="reviewTbody"></tbody>
           </table>
         </div>
       </div>
@@ -244,6 +323,7 @@
               <input id="interviewCat" placeholder="类别过滤（如 java、前端）" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:160px;" />
               <button class="btn-primary btn-sm" onclick="loadInterviewBank()">🔍 查询</button>
               <button class="btn-info btn-sm" onclick="openInterviewForm()">➕ 添加题目</button>
+              <button class="btn-warn btn-sm" onclick="openInterviewImport()">📥 批量导入</button>
             </div>
           </div>
           <table class="data-table">
@@ -261,6 +341,8 @@
             <div class="panel-tools">
               <input id="examCat" placeholder="类别过滤" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:160px;" />
               <button class="btn-primary btn-sm" onclick="loadExamBank()">🔍 查询</button>
+              <button class="btn-info btn-sm" onclick="openExamForm()">➕ 添加题目</button>
+              <button class="btn-warn btn-sm" onclick="openExamImport()">📥 批量导入</button>
             </div>
           </div>
           <table class="data-table">
@@ -286,7 +368,7 @@
             </div>
           </div>
           <table class="data-table">
-            <thead><tr><th>ID</th><th>用户ID</th><th>目标</th><th>评价</th><th>用户评论</th><th>时间</th></tr></thead>
+            <thead><tr><th>ID</th><th>用户</th><th>反馈场景</th><th>目标</th><th>评价</th><th>用户评论</th><th>时间</th></tr></thead>
             <tbody id="fbTbody"></tbody>
           </table>
         </div>
@@ -308,6 +390,48 @@
           <table class="data-table">
             <thead><tr><th>ID</th><th>Agent</th><th>请求</th><th>响应</th><th>原因</th><th>状态</th><th>操作</th></tr></thead>
             <tbody id="bcTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AI 使用情况 -->
+      <div class="page" id="page-ai-usage" style="display:none;">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">📈 AI 使用情况总览</div>
+          </div>
+          <div class="stat-grid" id="aiUsageStats">
+            <div class="stat-card grad-1"><div class="stat-label">AI 面试场次</div><div class="stat-num" id="ai-interview-total">-</div></div>
+            <div class="stat-card grad-2"><div class="stat-label">AI 面试问答数</div><div class="stat-num" id="ai-interview-msgs">-</div></div>
+            <div class="stat-card grad-3"><div class="stat-label">AI 笔试会话</div><div class="stat-num" id="ai-exam-sessions">-</div></div>
+            <div class="stat-card grad-4"><div class="stat-label">AI 笔试答题数</div><div class="stat-num" id="ai-exam-q">-</div></div>
+            <div class="stat-card grad-5"><div class="stat-label">AI 简历（解析/润色）</div><div class="stat-num" id="ai-resume">-</div></div>
+            <div class="stat-card grad-6"><div class="stat-label">AI 用户反馈（👍）</div><div class="stat-num" id="ai-fb-like">-</div></div>
+            <div class="stat-card"><div class="stat-label">AI 用户反馈（👎）</div><div class="stat-num" id="ai-fb-dislike">-</div></div>
+            <div class="stat-card"><div class="stat-label">累计 AI 调用数</div><div class="stat-num stat-like" id="ai-total">-</div></div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">🤖 各 Agent 使用分布</div></div>
+            <div class="panel-body">
+              <canvas id="agentBarChart" height="220"></canvas>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">📉 最近 7 天 AI 使用趋势</div></div>
+            <div class="panel-body">
+              <canvas id="dailyLineChart" height="220"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel-head"><div class="panel-title">🏆 AI 使用 TOP 用户</div></div>
+          <table class="data-table">
+            <thead><tr><th>排名</th><th>用户ID</th><th>用户名</th><th>姓名</th><th>学校</th><th>AI面试</th><th>AI笔试</th><th>AI简历</th><th>总计</th></tr></thead>
+            <tbody id="aiTopTbody"></tbody>
           </table>
         </div>
       </div>
@@ -359,6 +483,7 @@
 
 <div id="toast" class="toast" style="display:none;"></div>
 
-<script src="/static/js/admin.js"></script>
+<script src="/static/js/chart.umd.min.js"></script>
+  <script src="/static/js/admin.js?v=20261024a"></script>
 </body>
 </html>
